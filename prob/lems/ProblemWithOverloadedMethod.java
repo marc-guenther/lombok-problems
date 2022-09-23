@@ -81,10 +81,67 @@ public class ProblemWithOverloadedMethod {
         }
     }
 
-    // just call all of them...
-    public static void main(String[] args) {
-        ProblemWithOverloadedMethod.NormalCase.doit();
-        ProblemWithOverloadedMethod.FailCase1.doit();
-        ProblemWithOverloadedMethod.FailCase2.doit();
+    // another of these weird examples, this time with the lambda parameter
+    @ExtensionMethod(ProblemWithOverloadedMethod.Extensions2.class)
+    public static class FailCase3 {
+        public static void doit() {
+            List<String> list = Stream.of("a", "b", "c").filter(s -> s instanceof String).collect(Collectors.toList());
+            //                                                       ^
+            // s cannot be resolved or is not a field
+            System.out.println(list);
+        }
     }
+
+    // and another one, this one includes a method parameter as well
+    @ExtensionMethod(ProblemWithOverloadedMethod.Extensions2.class)
+    public static class FailCase4 {
+        public static void doit(String param) {
+            List<String> list = Stream.of("a", "b", "c").filter(s -> param == s).collect(Collectors.toList());
+            //                                                       ^^^^^
+            // param cannot be resolved or is not a field
+            //                                                                ^
+            // s cannot be resolved or is not a field
+            System.out.println(list);
+        }
+    }
+
+    // this one works, though
+    @ExtensionMethod(ProblemWithOverloadedMethod.Extensions2.class)
+    public static class SucessCase5 {
+        public static void doit(String param) {
+            // no problem here
+            List<String> list = Stream.of("a", "b", "c").filter(s -> param.equals(s)).collect(Collectors.toList());
+            System.out.println(list);
+        }
+    }
+
+
+    // and another one, this one involves an enum
+    @ExtensionMethod(ProblemWithOverloadedMethod.Extensions2.class)
+    public static class FailCase6 {
+        public static void doit(String param) {
+            List<String> list = Stream.of("a", "b", "c").filter(s -> {
+                switch (someAnimal()) {
+                    case DOG:
+                //       ^^^
+                //     DOG cannot be resolved to a variable
+                        return true;
+
+                    default:
+                //  ^^^^^^^
+                //  The default case is already defined
+                        return false;
+                }
+            }).collect(Collectors.toList());
+            System.out.println(list);
+        }
+    }
+
+    // enum and a helper function for above example
+    public static enum Animal {DOG, CAT, MOUSE;}
+
+    public static Animal someAnimal() {
+        return Animal.DOG;
+    }
+
 }
