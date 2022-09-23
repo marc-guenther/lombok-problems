@@ -59,6 +59,18 @@ public class ProblemWithExistingMethodInSubclass {
         }
     }
 
+    // supplying "suppressBaseMethods=false" fixes the problem
+    @ExtensionMethod(value=ProblemWithExistingMethodInSubclass.ObjectExtensions.class, suppressBaseMethods=false)
+    public static class WorkaroundCase {
+        public static void doit() {
+            Qualifier<Qualifier> qual = new Qualifier<>();
+            Object result = qual.or(q -> true);
+            //                   ^^
+            // fails, because we also declared or() as an extension method 
+            System.out.println(result);
+        }
+    }
+
 
     // just call all of them...
     public static void main(String[] args) {

@@ -144,4 +144,87 @@ public class ProblemWithOverloadedMethod {
         return Animal.DOG;
     }
 
+
+    // ### --- the suppresBaseMethods workaround --- ###
+
+    // All the failure examples from above work perfectly fine, when I supply the supressBaseMethods option :o
+    // The following are completely identical to the ones above, except for the parameter
+
+    // overload example: extension method, which is also called "filter", but has different parameters
+    // Eclipse complains with:
+    // The method filter(Stream<T>, BiPredicate<? super T,Integer>) in the type Main2.Extensions1 is not applicable for the arguments (Stream<String>, Predicate<? super String>)
+    @ExtensionMethod(value=ProblemWithOverloadedMethod.Extensions1.class, suppressBaseMethods=false)
+    public static class WorkaroundCase1 {
+        public static void doit() {
+            List<String> list = Stream.of("a", "b", "c").filter(s -> {
+                //                                       ^^^^^^
+                // fails, because we declared filter with a different parameter type
+                String a = "";
+                return a.length() == 0;
+            }).collect(Collectors.toList());
+            System.out.println(list);
+        }
+    }
+
+    // identical-method example: extension method, whose signature is identical to the original "Stream.filter()" method (same name and parameter list)
+    // Eclipse complains in the "return a.length()..." line:
+    // The local variable a may not have been initialized
+    @ExtensionMethod(value=ProblemWithOverloadedMethod.Extensions2.class, suppressBaseMethods=false)
+    public static class WorkaroundCase2 {
+        public static void doit() {
+            List<String> list = Stream.of("a", "b", "c").filter(s -> {
+                String a = "";
+                return a.length() == 0;
+                //     ^
+                // "The local variable a may not have been initialized"
+                // This doesn't make any sense. We declared the filter method exactly as it is already defined in Stream.
+            }).collect(Collectors.toList());
+            System.out.println(list);
+        }
+    }
+
+    // another of these weird examples, this time with the lambda parameter
+    @ExtensionMethod(value=ProblemWithOverloadedMethod.Extensions2.class, suppressBaseMethods=false)
+    public static class WorkaroundCase3 {
+        public static void doit() {
+            List<String> list = Stream.of("a", "b", "c").filter(s -> s instanceof String).collect(Collectors.toList());
+            //                                                       ^
+            // s cannot be resolved or is not a field
+            System.out.println(list);
+        }
+    }
+
+    // and another one, this one includes a method parameter as well
+    @ExtensionMethod(value=ProblemWithOverloadedMethod.Extensions2.class, suppressBaseMethods=false)
+    public static class WorkaroundCase4 {
+        public static void doit(String param) {
+            List<String> list = Stream.of("a", "b", "c").filter(s -> param == s).collect(Collectors.toList());
+            //                                                       ^^^^^
+            // param cannot be resolved or is not a field
+            //                                                                ^
+            // s cannot be resolved or is not a field
+            System.out.println(list);
+        }
+    }
+
+    // and another one, this one involves an enum
+    @ExtensionMethod(value=ProblemWithOverloadedMethod.Extensions2.class, suppressBaseMethods=false)
+    public static class WorkaroundCase6 {
+        public static void doit(String param) {
+            List<String> list = Stream.of("a", "b", "c").filter(s -> {
+                switch (someAnimal()) {
+                    case DOG:
+                //       ^^^
+                //     DOG cannot be resolved to a variable
+                        return true;
+
+                    default:
+                //  ^^^^^^^
+                //  The default case is already defined
+                        return false;
+                }
+            }).collect(Collectors.toList());
+            System.out.println(list);
+        }
+    }
 }
