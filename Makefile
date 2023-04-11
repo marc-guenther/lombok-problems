@@ -8,3 +8,6 @@ problem1:
 problem2:
 	javac -cp lombok-1.18.24.jar prob/lems/ProblemWithJavacButNotEclipse2.java
 	java -cp lombok-1.18.24.jar:. 'prob.lems.ProblemWithJavacButNotEclipse2'
+
+problem3:
+	javac -cp lombok-1.18.24.jar prob/lems/ProblemWithJavacButNotEclipse3.java
